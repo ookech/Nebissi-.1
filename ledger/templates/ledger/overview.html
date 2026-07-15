@@ -1,0 +1,37 @@
+{% extends "ledger/base.html" %}
+{% block title %}Overview{% endblock %}
+{% block content %}
+<div class="metrics">
+  <div class="metric accent">
+    <p class="label">Today</p>
+    <p class="value">KSh {{ today_total|floatformat:0 }}</p>
+  </div>
+  <div class="metric">
+    <p class="label">This week</p>
+    <p class="value">KSh {{ week_total|floatformat:0 }}</p>
+  </div>
+  <div class="metric">
+    <p class="label">All time</p>
+    <p class="value">KSh {{ all_total|floatformat:0 }}</p>
+  </div>
+  <div class="metric">
+    <p class="label">Transactions</p>
+    <p class="value">{{ count }}</p>
+  </div>
+</div>
+
+<div class="card">
+  <h2 class="section-title">Revenue by service (all time)</h2>
+  {% if by_service %}
+    {% for row in by_service %}
+    <div class="service-row">
+      <span class="name">{{ row.service__name }}</span>
+      <span class="bar-track"><span class="bar-fill" style="width:{% widthratio row.total max_total 100 %}%"></span></span>
+      <span class="amt">KSh {{ row.total|floatformat:0 }}</span>
+    </div>
+    {% endfor %}
+  {% else %}
+    <div class="empty-state">No payments recorded yet.</div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,91 @@
+{% extends "ledger/base.html" %}
+{% block title %}New payment{% endblock %}
+{% block content %}
+<div class="card">
+  <h2 class="section-title">{% if editing %}Edit payment{% else %}Record a payment{% endif %}</h2>
+  <form method="post" id="paymentForm">
+    {% csrf_token %}
+    <div class="form-grid">
+      <div>
+        <label for="id_service">Service</label>
+        <select name="service" id="id_service" required>
+          {% for s in services %}
+          <option value="{{ s.pk }}" data-price="{{ s.default_price }}" {% if
+            form.service.value|stringformat:"s"==s.pk|stringformat:"s" %}selected{% endif %}>{{ s.name }}</option>
+          {% endfor %}
+        </select>
+        {% if form.service.errors %}<ul class="errorlist">{% for e in form.service.errors %}<li>{{ e }}</li>{% endfor %}
+        </ul>{% endif %}
+      </div>
+      <div>
+        <label for="id_quantity">Quantity / pages</label>
+        {{ form.quantity }}
+      </div>
+      <div>
+        <label for="id_unit_price">Unit price (KSh)</label>
+        {{ form.unit_price }}
+      </div>
+      <div>
+        <label for="id_amount">Total amount (KSh)</label>
+        {{ form.amount }}
+      </div>
+      <div>
+        <label for="id_customer_name">Customer name (optional)</label>
+        {{ form.customer_name }}
+      </div>
+      <div>
+        <label for="id_method">Payment method</label>
+        {{ form.method }}
+      </div>
+      <div>
+        <label for="id_date">Date</label>
+        {{ form.date }}
+      </div>
+      <div class="full">
+        <label for="id_notes">Notes (optional)</label>
+        {{ form.notes }}
+      </div>
+    </div>
+    <div class="tear"></div>
+    <div style="display:flex;align-products:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+      <p style="font-family:'Courier Prime',monospace;font-size:28px;font-weight:700;color:var(--teal-dark);margin:0;"
+        id="amountPreview">KSh 0</p>
+      <button type="submit" class="btn">{% if editing %}Update payment{% else %}Record payment{% endif %}</button>
+    </div>
+  </form>
+</div>
+
+<script>
+  const serviceSel = document.getElementById('id_service');
+  const qtyInput = document.getElementById('id_quantity');
+  const unitInput = document.getElementById('id_unit_price');
+  const amountInput = document.getElementById('id_amount');
+  const preview = document.getElementById('amountPreview');
+
+  function fmt(n) { return 'KSh ' + Math.round(Number(n) || 0).toLocaleString(); }
+
+  function recalc() {
+    const qty = Number(qtyInput.value) || 0;
+    const unit = Number(unitInput.value) || 0;
+    amountInput.value = (qty * unit).toFixed(2);
+    preview.textContent = fmt(amountInput.value);
+  }
+
+  serviceSel.addEventListener('change', () => {
+    const opt = serviceSel.options[serviceSel.selectedIndex];
+    if (opt && !unitInput.dataset.touched) {
+      unitInput.value = opt.dataset.price;
+    }
+    recalc();
+  });
+  unitInput.addEventListener('input', () => { unitInput.dataset.touched = '1'; recalc(); });
+  qtyInput.addEventListener('input', recalc);
+  amountInput.addEventListener('input', () => { preview.textContent = fmt(amountInput.value); });
+
+  if (!unitInput.value) {
+    const opt = serviceSel.options[serviceSel.selectedIndex];
+    if (opt) unitInput.value = opt.dataset.price;
+  }
+  recalc();
+</script>
+{% endblock %}

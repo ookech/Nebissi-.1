@@ -1,0 +1,48 @@
+{% extends "ledger/base.html" %}
+{% block title %}Services{% endblock %}
+{% block content %}
+<div class="card">
+  <h2 class="section-title">Manage services</h2>
+  {% if services %}
+  {% for s in services %}
+  <form method="post" action="{% url 'edit_service' s.pk %}" class="service-manage-row">
+    {% csrf_token %}
+    <span class="sname">{{ s.name }}{% if not s.is_active %} <span
+        style="color:var(--ink-soft);font-weight:400;">(inactive)</span>{% endif %}</span>
+    <input type="hidden" name="name" value="{{ s.name }}">
+    <input type="number" name="default_price" min="0" step="1" value="{{ s.default_price|floatformat:0 }}"
+      style="width:100px;">
+    <label
+      style="display:flex;align-products:center;gap:6px;font-size:12px;text-transform:none;font-weight:400;width:auto;">
+      <input type="checkbox" name="is_active" style="width:auto;" {% if s.is_active %}checked{% endif %}> Active
+    </label>
+    <button class="btn small secondary" type="submit">Save</button>
+    <button class="btn small danger" type="submit" formaction="{% url 'delete_service' s.pk %}"
+      onclick="return confirm('Remove this service? This only works if it has no payments recorded.');">Remove</button>
+  </form>
+  {% endfor %}
+  {% else %}
+  <div class="empty-state">No services yet.</div>
+  {% endif %}
+
+  <div class="tear"></div>
+  <form method="post">
+    {% csrf_token %}
+    <div class="form-grid">
+      <div>
+        <label for="id_name">Service name</label>
+        {{ form.name }}
+        {% if form.name.errors %}<ul class="errorlist">{% for e in form.name.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+        {% endif %}
+      </div>
+      <div>
+        <label for="id_default_price">Default price (KSh)</label>
+        {{ form.default_price }}
+      </div>
+    </div>
+    <div style="margin-top:14px;">
+      <button class="btn" type="submit">Add service</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

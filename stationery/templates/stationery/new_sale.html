@@ -1,0 +1,13 @@
+{% extends "ledger/base.html" %}
+{% block content %}
+
+<div class="panel">
+  <h3>Record a sale</h3>
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn">Record sale</button>
+  </form>
+</div>
+
+{% endblock %}

@@ -1,0 +1,513 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Nebissi{% endblock %} — Nebissi</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Courier+Prime:wght@400;700&family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --paper: #F6F3EA;
+      --paper-2: #EFEADB;
+      --ink: #211D16;
+      --ink-soft: #5B5548;
+      --line: #CDC4AE;
+      --teal: #0F5C4F;
+      --teal-dark: #0A4238;
+      --teal-tint: #DCEDE8;
+      --red: #B23A2E;
+      --red-tint: #F5E1DE;
+      --white: #FFFDF8;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--paper-2);
+      font-family: 'Inter', sans-serif;
+      color: var(--ink);
+      min-height: 100vh;
+    }
+
+    .wrap {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 32px 20px 80px;
+    }
+
+    header {
+      display: flex;
+      align-products: center;
+      justify-content: space-between;
+      margin-bottom: 28px;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .brand {
+      display: flex;
+      align-products: center;
+      gap: 14px;
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .stamp {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      border: 2px solid var(--teal);
+      display: flex;
+      align-products: center;
+      justify-content: center;
+      transform: rotate(-6deg);
+      color: var(--teal);
+      font-family: 'Special Elite', monospace;
+      font-size: 11px;
+      letter-spacing: 0.5px;
+      text-align: center;
+      line-height: 1.1;
+      flex-shrink: 0;
+    }
+
+    .brand h1 {
+      font-family: 'Special Elite', monospace;
+      font-size: 26px;
+      margin: 0;
+      letter-spacing: 1px;
+      color: var(--ink);
+    }
+
+    .brand p {
+      margin: 2px 0 0;
+      font-size: 13px;
+      color: var(--ink-soft);
+    }
+
+    .headline-right {
+      display: flex;
+      align-products: center;
+      gap: 12px;
+    }
+
+    .today-badge {
+      font-family: 'Courier Prime', monospace;
+      font-size: 13px;
+      background: var(--white);
+      border: 1px solid var(--line);
+      padding: 8px 14px;
+      border-radius: 6px;
+      color: var(--ink-soft);
+    }
+
+    .user-pill {
+      font-size: 13px;
+      color: var(--ink-soft);
+    }
+
+    .user-pill a {
+      color: var(--teal-dark);
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    nav.tabs {
+      display: flex;
+      gap: 4px;
+      border-bottom: 1px solid var(--line);
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+
+    nav.tabs a {
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      text-decoration: none;
+      padding: 10px 16px;
+      color: var(--ink-soft);
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+    }
+
+    nav.tabs a:hover {
+      color: var(--ink);
+    }
+
+    nav.tabs a.active {
+      color: var(--teal-dark);
+      border-bottom-color: var(--teal);
+    }
+
+    .card {
+      background: var(--white);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 18px 20px;
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+
+    .metric {
+      background: var(--white);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 16px 18px;
+    }
+
+    .metric .label {
+      font-size: 12px;
+      color: var(--ink-soft);
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      margin: 0 0 6px;
+    }
+
+    .metric .value {
+      font-family: 'Courier Prime', monospace;
+      font-size: 24px;
+      font-weight: 700;
+      margin: 0;
+    }
+
+    .metric.accent {
+      background: var(--teal-tint);
+      border-color: var(--teal);
+    }
+
+    .metric.accent .value {
+      color: var(--teal-dark);
+    }
+
+    h2.section-title {
+      font-size: 15px;
+      font-weight: 600;
+      margin: 0 0 12px;
+      color: var(--ink);
+    }
+
+    .service-row {
+      display: flex;
+      align-products: center;
+      gap: 10px;
+      padding: 8px 0;
+      border-bottom: 1px dashed var(--line);
+      font-size: 13px;
+    }
+
+    .service-row:last-child {
+      border-bottom: none;
+    }
+
+    .service-row .name {
+      flex: 0 0 160px;
+      color: var(--ink);
+    }
+
+    .service-row .bar-track {
+      flex: 1;
+      height: 8px;
+      background: var(--paper-2);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .service-row .bar-fill {
+      height: 100%;
+      background: var(--teal);
+      border-radius: 4px;
+    }
+
+    .service-row .amt {
+      flex: 0 0 100px;
+      text-align: right;
+      font-family: 'Courier Prime', monospace;
+      font-weight: 700;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .form-grid .full {
+      grid-column: 1/-1;
+    }
+
+    label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--ink-soft);
+      margin-bottom: 5px;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      padding: 9px 10px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: var(--paper);
+      color: var(--ink);
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      outline: 2px solid var(--teal);
+      outline-offset: 1px;
+    }
+
+    .btn {
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      padding: 10px 18px;
+      border-radius: 6px;
+      border: 1px solid var(--teal);
+      background: var(--teal);
+      color: var(--white);
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .btn:hover {
+      background: var(--teal-dark);
+      border-color: var(--teal-dark);
+    }
+
+    .btn.secondary {
+      background: var(--white);
+      color: var(--teal-dark);
+    }
+
+    .btn.danger {
+      background: var(--white);
+      color: var(--red);
+      border-color: var(--red);
+    }
+
+    .btn.danger:hover {
+      background: var(--red-tint);
+    }
+
+    .btn.small {
+      padding: 5px 10px;
+      font-size: 12px;
+    }
+
+    .tear {
+      height: 12px;
+      margin: 20px 0;
+      background: linear-gradient(135deg, var(--paper-2) 25%, transparent 25%) -6px 0/12px 12px repeat-x, linear-gradient(-135deg, var(--paper-2) 25%, transparent 25%) -6px 0/12px 12px repeat-x;
+      background-color: var(--white);
+    }
+
+    .filters {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+      align-products: end;
+    }
+
+    .filters .field {
+      min-width: 150px;
+    }
+
+    .filters .field.grow {
+      flex: 1;
+      min-width: 180px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    thead th {
+      text-align: left;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--ink-soft);
+      border-bottom: 1px solid var(--line);
+      padding: 8px 6px;
+    }
+
+    tbody td {
+      padding: 10px 6px;
+      border-bottom: 1px dashed var(--line);
+      vertical-align: top;
+    }
+
+    tbody tr:hover {
+      background: var(--paper);
+    }
+
+    .amt-cell {
+      font-family: 'Courier Prime', monospace;
+      font-weight: 700;
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--ink-soft);
+    }
+
+    .row-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .ledger-total {
+      display: flex;
+      justify-content: space-between;
+      align-products: center;
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 2px solid var(--ink);
+      font-family: 'Courier Prime', monospace;
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .service-manage-row {
+      display: flex;
+      align-products: center;
+      gap: 10px;
+      padding: 10px 0;
+      border-bottom: 1px dashed var(--line);
+    }
+
+    .service-manage-row .sname {
+      flex: 1;
+      font-weight: 600;
+    }
+
+    .messages {
+      list-style: none;
+      padding: 0;
+      margin: 0 0 18px;
+    }
+
+    .messages li {
+      padding: 10px 14px;
+      border-radius: 6px;
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+
+    .messages li.success {
+      background: var(--teal-tint);
+      color: var(--teal-dark);
+    }
+
+    .messages li.error {
+      background: var(--red-tint);
+      color: var(--red);
+    }
+
+    .helptext,
+    .errorlist {
+      font-size: 12px;
+      color: var(--ink-soft);
+      margin: 2px 0 0;
+      list-style: none;
+      padding: 0;
+    }
+
+    .errorlist {
+      color: var(--red);
+    }
+
+    .login-card {
+      max-width: 360px;
+      margin: 60px auto;
+    }
+
+    @media (max-width:600px) {
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .service-row .name {
+        flex-basis: 110px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <header>
+      <a class="brand" href="{% url 'overview' %}">
+        <div class="stamp">NEBISSI<br>CYBER</div>
+        <div>
+          <h1>Nebissi</h1>
+          <p>Cyber café · payment ledger</p>
+        </div>
+      </a>
+      <div class="headline-right">
+        <div class="today-badge">{% now "D, j M Y" %}</div>
+        {% if user.is_authenticated %}
+        <div class="user-pill">{{ user.username }} · <a href="{% url 'logout' %}">Log out</a></div>
+        {% endif %}
+      </div>
+    </header>
+
+    {% if user.is_authenticated %}
+    <nav class="tabs">
+      <a href="{% url 'overview' %}"
+        class="{% if request.resolver_match.url_name == 'overview' %}active{% endif %}">Overview</a>
+      <a href="{% url 'new_payment' %}"
+        class="{% if request.resolver_match.url_name == 'new_payment' or request.resolver_match.url_name == 'edit_payment' %}active{% endif %}">New
+        payment</a>
+      <a href="{% url 'ledger' %}"
+        class="{% if request.resolver_match.url_name == 'ledger' %}active{% endif %}">Ledger</a>
+      <a href="{% url 'services' %}"
+        class="{% if request.resolver_match.url_name == 'services' %}active{% endif %}">Services</a>
+      <a href="{% url 'stationery:overview' %}"
+        class="{% if 'stationery' in request.resolver_match.app_name %}active{% endif %}">Stationery</a>
+      {% if user.is_staff %}
+      <a href="{% url 'admin:index' %}">Django admin</a>
+      {% endif %}
+    </nav>
+    {% endif %}
+
+    {% if messages %}
+    <ul class="messages">
+      {% for message in messages %}<li class="{{ message.tags }}">{{ message }}</li>{% endfor %}
+    </ul>
+    {% endif %}
+
+    {% block content %}{% endblock %}
+  </div>
+</body>
+
+</html>
