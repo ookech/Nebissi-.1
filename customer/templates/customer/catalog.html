@@ -1,0 +1,46 @@
+{% extends "ledger/base.html" %}
+{% block title %}Shop{% endblock %}
+{% block content %}
+<div class="card">
+  <h2 class="section-title">Services</h2>
+  <div class="catalog-grid">
+    {% for s in services %}
+    <div class="catalog-item">
+      <h3>{{ s.name }}</h3>
+      <p class="price">KSh {{ s.default_price }}</p>
+      <form method="post" action="{% url 'customer:add_to_cart' 'service' s.pk %}">
+        {% csrf_token %}
+        <input type="number" name="quantity" value="1" min="1" style="width:60px;">
+        <button type="submit" class="btn">Add to order</button>
+      </form>
+    </div>
+    {% empty %}
+    <p>No services available right now.</p>
+    {% endfor %}
+  </div>
+</div>
+
+<div class="card" style="margin-top:20px;">
+  <h2 class="section-title">Stationery</h2>
+  <div class="catalog-grid">
+    {% for p in products %}
+    <div class="catalog-item">
+      <h3>{{ p.name }}</h3>
+      <p class="price">KSh {{ p.sale_price }}</p>
+      <p class="muted">{{ p.stock_qty }} in stock</p>
+      <form method="post" action="{% url 'customer:add_to_cart' 'product' p.pk %}">
+        {% csrf_token %}
+        <input type="number" name="quantity" value="1" min="1" max="{{ p.stock_qty }}" style="width:60px;">
+        <button type="submit" class="btn">Add to order</button>
+      </form>
+    </div>
+    {% empty %}
+    <p>No stationery items in stock right now.</p>
+    {% endfor %}
+  </div>
+</div>
+
+<div style="margin-top:20px;">
+  <a href="{% url 'customer:cart' %}" class="btn">View cart</a>
+</div>
+{% endblock %}

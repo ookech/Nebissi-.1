@@ -17,9 +17,12 @@ class Service(models.Model):
 
 class Payment(models.Model):
     METHOD_CHOICES = [
-        ('cash', 'Cash'),
         ('mpesa', 'M-Pesa'),
-        ('other', 'Other'),
+    ]
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('successful', 'Successful'),
+        ('failed', 'Failed'),
     ]
 
     service = models.ForeignKey(Service, on_delete=models.PROTECT, related_name='payments')
@@ -27,7 +30,11 @@ class Payment(models.Model):
     unit_price = models.DecimalField(max_digits=10, decimal_places=2)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     customer_name = models.CharField(max_length=150, blank=True, default='Walk-in')
-    method = models.CharField(max_length=10, choices=METHOD_CHOICES, default='cash')
+    phone_number = models.CharField(max_length=15, blank=True)
+    method = models.CharField(max_length=10, choices=METHOD_CHOICES, default='mpesa')
+    status = models.CharField(max_length=12, choices=STATUS_CHOICES, default='pending')
+    checkout_request_id = models.CharField(max_length=100, blank=True)
+    mpesa_receipt = models.CharField(max_length=40, blank=True)
     date = models.DateField()
     notes = models.CharField(max_length=255, blank=True)
     recorded_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='payments')

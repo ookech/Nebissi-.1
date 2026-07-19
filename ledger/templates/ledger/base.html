@@ -37,6 +37,42 @@
       min-height: 100vh;
     }
 
+    #splash {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background: var(--paper-2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.4s ease;
+    }
+
+    #splash img {
+      width: 120px;
+      height: 120px;
+      animation: splash-pulse 1.4s ease-in-out infinite;
+    }
+
+    #splash.hide {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    @keyframes splash-pulse {
+
+      0%,
+      100% {
+        transform: scale(1);
+        opacity: 1;
+      }
+
+      50% {
+        transform: scale(1.06);
+        opacity: 0.85;
+      }
+    }
+
     .wrap {
       max-width: 1000px;
       margin: 0 auto;
@@ -45,7 +81,7 @@
 
     header {
       display: flex;
-      align-products: center;
+      align-items: center;
       justify-content: space-between;
       margin-bottom: 28px;
       flex-wrap: wrap;
@@ -54,7 +90,7 @@
 
     .brand {
       display: flex;
-      align-products: center;
+      align-items: center;
       gap: 14px;
       text-decoration: none;
       color: inherit;
@@ -66,7 +102,7 @@
       border-radius: 50%;
       border: 2px solid var(--teal);
       display: flex;
-      align-products: center;
+      align-items: center;
       justify-content: center;
       transform: rotate(-6deg);
       color: var(--teal);
@@ -94,7 +130,7 @@
 
     .headline-right {
       display: flex;
-      align-products: center;
+      align-items: center;
       gap: 12px;
     }
 
@@ -111,12 +147,25 @@
     .user-pill {
       font-size: 13px;
       color: var(--ink-soft);
+      display: flex;
+      align-items: center;
+      gap: 6px;
     }
 
-    .user-pill a {
+    .user-pill .logout-btn {
       color: var(--teal-dark);
       text-decoration: none;
       font-weight: 600;
+      background: none;
+      border: none;
+      padding: 0;
+      font-family: inherit;
+      font-size: inherit;
+      cursor: pointer;
+    }
+
+    .user-pill .logout-btn:hover {
+      text-decoration: underline;
     }
 
     nav.tabs {
@@ -201,7 +250,7 @@
 
     .service-row {
       display: flex;
-      align-products: center;
+      align-items: center;
       gap: 10px;
       padding: 8px 0;
       border-bottom: 1px dashed var(--line);
@@ -329,7 +378,7 @@
       gap: 10px;
       flex-wrap: wrap;
       margin-bottom: 16px;
-      align-products: end;
+      align-items: end;
     }
 
     .filters .field {
@@ -388,7 +437,7 @@
     .ledger-total {
       display: flex;
       justify-content: space-between;
-      align-products: center;
+      align-items: center;
       margin-top: 14px;
       padding-top: 14px;
       border-top: 2px solid var(--ink);
@@ -399,7 +448,7 @@
 
     .service-manage-row {
       display: flex;
-      align-products: center;
+      align-items: center;
       gap: 10px;
       padding: 10px 0;
       border-bottom: 1px dashed var(--line);
@@ -464,6 +513,12 @@
 </head>
 
 <body>
+  {% if request.resolver_match.url_name == 'overview' and not user.is_authenticated %}
+  <div id="splash">
+    <img src="{% static 'ledger/nebissi-logo.png' %}" alt="Nebissi">
+  </div>
+  {% endif %}
+
   <div class="wrap">
     <header>
       <a class="brand" href="{% url 'overview' %}">
@@ -476,13 +531,20 @@
       <div class="headline-right">
         <div class="today-badge">{% now "D, j M Y" %}</div>
         {% if user.is_authenticated %}
-        <div class="user-pill">{{ user.username }} · <a href="{% url 'logout' %}">Log out</a></div>
+        <div class="user-pill">
+          {{ user.username }} ·
+          <form method="post" action="{% url 'logout' %}" style="display:inline;">
+            {% csrf_token %}
+            <button type="submit" class="logout-btn">Log out</button>
+          </form>
+        </div>
         {% endif %}
       </div>
     </header>
 
     {% if user.is_authenticated %}
     <nav class="tabs">
+      {% if user.profile.role == 'admin' %}
       <a href="{% url 'overview' %}"
         class="{% if request.resolver_match.url_name == 'overview' %}active{% endif %}">Overview</a>
       <a href="{% url 'new_payment' %}"
@@ -497,6 +559,12 @@
       {% if user.is_staff %}
       <a href="{% url 'admin:index' %}">Django admin</a>
       {% endif %}
+      {% elif user.profile.role == 'employee' %}
+      <a href="{% url 'worker_dashboard' %}"
+        class="{% if request.resolver_match.url_name == 'worker_dashboard' %}active{% endif %}">My payments</a>
+      <a href="{% url 'stationery:overview' %}"
+        class="{% if 'stationery' in request.resolver_match.app_name %}active{% endif %}">Stationery</a>
+      {% endif %}
     </nav>
     {% endif %}
 
@@ -508,6 +576,37 @@
 
     {% block content %}{% endblock %}
   </div>
+
+  {% if request.resolver_match.url_name == 'overview' and not user.is_authenticated %}
+  <script>
+    (function () {
+      var splash = document.getElementById('splash');
+      if (!splash) return;
+
+      if (sessionStorage.getItem('nebissi_splash_shown')) {
+        splash.remove();
+        return;
+      }
+
+      sessionStorage.setItem('nebissi_splash_shown', '1');
+      var minShownAt = Date.now() + 900;
+
+      function hideSplash() {
+        var wait = Math.max(0, minShownAt - Date.now());
+        setTimeout(function () {
+          splash.classList.add('hide');
+          setTimeout(function () { splash.remove(); }, 450);
+        }, wait);
+      }
+
+      if (document.readyState === 'complete') {
+        hideSplash();
+      } else {
+        window.addEventListener('load', hideSplash);
+      }
+    })();
+  </script>
+  {% endif %}
 </body>
 
 </html>

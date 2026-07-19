@@ -11,6 +11,10 @@
     <p class="value">KSh {{ week_total|floatformat:0 }}</p>
   </div>
   <div class="metric">
+    <p class="label">This month</p>
+    <p class="value">KSh {{ month_total|floatformat:0 }}</p>
+  </div>
+  <div class="metric">
     <p class="label">All time</p>
     <p class="value">KSh {{ all_total|floatformat:0 }}</p>
   </div>
@@ -20,18 +24,68 @@
   </div>
 </div>
 
+{% if pending_requests %}
+<div class="card" style="margin-bottom:24px;">
+  <h2 class="section-title">Pending worker requests</h2>
+  {% for req in pending_requests %}
+  <div class="service-manage-row">
+    <span class="sname">{{ req.username }}{% if req.phone_number %} · {{ req.phone_number }}{% endif %}</span>
+    <span style="font-size:12px;color:var(--ink-soft);">{{ req.submitted_at|date:"j M, H:i" }}</span>
+    <form method="post" action="{% url 'accounts:approve_request' req.pk %}" style="display:inline;">
+      {% csrf_token %}
+      <button type="submit" class="btn small">Approve</button>
+    </form>
+    <form method="post" action="{% url 'accounts:reject_request' req.pk %}" style="display:inline;">
+      {% csrf_token %}
+      <button type="submit" class="btn small danger">Reject</button>
+    </form>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
 <div class="card">
   <h2 class="section-title">Revenue by service (all time)</h2>
   {% if by_service %}
-    {% for row in by_service %}
-    <div class="service-row">
-      <span class="name">{{ row.service__name }}</span>
-      <span class="bar-track"><span class="bar-fill" style="width:{% widthratio row.total max_total 100 %}%"></span></span>
-      <span class="amt">KSh {{ row.total|floatformat:0 }}</span>
-    </div>
-    {% endfor %}
+  {% for row in by_service %}
+  <div class="service-row">
+    <span class="name">{{ row.service__name }}</span>
+    <span class="bar-track"><span class="bar-fill"
+        style="width:{% widthratio row.total max_total 100 %}%"></span></span>
+    <span class="amt">KSh {{ row.total|floatformat:0 }}</span>
+  </div>
+  {% endfor %}
   {% else %}
-    <div class="empty-state">No payments recorded yet.</div>
+  <div class="empty-state">No payments recorded yet.</div>
+  {% endif %}
+</div>
+
+<div class="card">
+  <h2 class="section-title">Recent payments</h2>
+  {% if recent_payments %}
+  {% for payment in recent_payments %}
+  <div class="service-manage-row">
+    <span class="sname">{{ payment.customer_name }} · {{ payment.service.name }}</span>
+    <span style="font-size:12px;color:var(--ink-soft);">{{ payment.date }} · KSh {{ payment.amount|floatformat:0 }} · {{
+      payment.recorded_by.username|default:'System' }} · {{ payment.get_status_display }}</span>
+  </div>
+  {% endfor %}
+  {% else %}
+  <div class="empty-state">No payment activity yet.</div>
+  {% endif %}
+</div>
+
+<div class="card">
+  <h2 class="section-title">Employee activity</h2>
+  {% if employee_activity %}
+  {% for activity in employee_activity %}
+  <div class="service-manage-row">
+    <span class="sname">{{ activity.recorded_by__username }}</span>
+    <span style="font-size:12px;color:var(--ink-soft);">{{ activity.count }} payments recorded</span>
+  </div>
+  {% endfor %}
+  {% else %}
+  <div class="empty-state">No employee activity yet.</div>
   {% endif %}
 </div>
 {% endblock %}

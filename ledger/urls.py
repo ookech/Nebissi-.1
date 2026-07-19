@@ -12,6 +12,7 @@ urlpatterns = [
     path('services/', views.services, name='services'),
     path('services/<int:pk>/edit/', views.edit_service, name='edit_service'),
     path('services/<int:pk>/delete/', views.delete_service, name='delete_service'),
-    path('login/', auth_views.LoginView.as_view(template_name='ledger/login.html'), name='login'),
-    path('logout/', auth_views.LogoutView.as_view(), name='logout'),
+    path('login/', views.RoleHintLoginView.as_view(), name='login'),
+    path('logout/', auth_views.LogoutView.as_view(next_page='overview'), name='logout'),
+    path('worker/', views.worker_dashboard, name='worker_dashboard'),
 ]

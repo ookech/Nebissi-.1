@@ -17,8 +17,10 @@
       <input type="checkbox" name="is_active" style="width:auto;" {% if s.is_active %}checked{% endif %}> Active
     </label>
     <button class="btn small secondary" type="submit">Save</button>
+    {% if request.user.profile.role == 'admin' %}
     <button class="btn small danger" type="submit" formaction="{% url 'delete_service' s.pk %}"
       onclick="return confirm('Remove this service? This only works if it has no payments recorded.');">Remove</button>
+    {% endif %}
   </form>
   {% endfor %}
   {% else %}

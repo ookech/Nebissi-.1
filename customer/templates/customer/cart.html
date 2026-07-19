@@ -1,0 +1,37 @@
+{% extends "ledger/base.html" %}
+{% block title %}Your cart{% endblock %}
+{% block content %}
+<div class="card">
+  <h2 class="section-title">Your cart</h2>
+  {% if cart.cart %}
+  <table class="cart-table">
+    <thead>
+      <tr><th>Item</th><th>Unit price</th><th>Qty</th><th>Subtotal</th><th></th></tr>
+    </thead>
+    <tbody>
+     {% for item in items %}
+<tr>
+  <td>{{ item.name }}</td>
+  <td>KSh {{ item.unit_price }}</td>
+  <td>{{ item.quantity }}</td>
+  <td>KSh {{ item.subtotal }}</td>
+  <td>
+    <form method="post" action="{% url 'customer:remove_from_cart' item.key %}">
+      {% csrf_token %}
+      <button type="submit" class="link-button">Remove</button>
+    </form>
+  </td>
+</tr>
+{% endfor %}
+    </tbody>
+  </table>
+  <p style="font-weight:700; margin-top:16px;">Total: KSh {{ cart.total }}</p>
+  <a href="{% url 'customer:checkout' %}" class="btn">Proceed to checkout</a>
+  {% else %}
+  <p>Your cart is empty.</p>
+  {% endif %}
+  <div style="margin-top:16px;">
+    <a href="{% url 'customer:catalog' %}">&larr; Back to shop</a>
+  </div>
+</div>
+{% endblock %}

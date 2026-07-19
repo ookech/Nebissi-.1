@@ -1,0 +1,13 @@
+{% extends "ledger/base.html" %}
+{% block title %}Pending approval{% endblock %}
+{% block content %}
+<div class="card login-card">
+    <h2 class="section-title">Pending approval</h2>
+    <p>Your worker account is waiting for admin approval.</p>
+    {% if pending_request %}
+    <p>Status: <strong>{{ pending_request.get_status_display }}</strong></p>
+    <p>Submitted: {{ pending_request.submitted_at|date:"j M Y, H:i" }}</p>
+    {% endif %}
+    <p>Please sign in again after an admin has approved your access.</p>
+</div>
+{% endblock %}

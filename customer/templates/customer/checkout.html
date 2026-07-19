@@ -1,0 +1,14 @@
+{% extends "ledger/base.html" %}
+{% block title %}Checkout{% endblock %}
+{% block content %}
+<div class="card">
+  <h2 class="section-title">Checkout</h2>
+  <p>Total due: <strong>KSh {{ cart.total }}</strong></p>
+  <form method="post">
+    {% csrf_token %}
+    <label for="phone_number">M-Pesa phone number</label>
+    <input type="text" name="phone_number" id="phone_number" placeholder="e.g. 0712345678" required>
+    <button type="submit" class="btn">Pay with M-Pesa</button>
+  </form>
+</div>
+{% endblock %}

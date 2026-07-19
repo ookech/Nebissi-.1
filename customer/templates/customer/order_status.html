@@ -1,0 +1,18 @@
+{% extends "ledger/base.html" %}
+{% block title %}Order #{{ order.pk }}{% endblock %}
+{% block content %}
+<div class="card">
+  <h2 class="section-title">Order #{{ order.pk }}</h2>
+  <p>Status: <strong>{{ order.get_status_display }}</strong></p>
+  <p>Total: KSh {{ order.total_amount }}</p>
+  <table class="cart-table">
+    <thead><tr><th>Item</th><th>Qty</th><th>Unit price</th></tr></thead>
+    <tbody>
+      {% for item in order.items.all %}
+      <tr><td>{{ item.name }}</td><td>{{ item.quantity }}</td><td>KSh {{ item.unit_price }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <a href="{% url 'customer:catalog' %}">&larr; Back to shop</a>
+</div>
+{% endblock %}

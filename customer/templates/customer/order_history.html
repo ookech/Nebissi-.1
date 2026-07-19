@@ -1,0 +1,24 @@
+{% extends "ledger/base.html" %}
+{% block title %}Your orders{% endblock %}
+{% block content %}
+<div class="card">
+  <h2 class="section-title">Your orders</h2>
+  {% if orders %}
+  <table class="cart-table">
+    <thead><tr><th>Order</th><th>Date</th><th>Status</th><th>Total</th></tr></thead>
+    <tbody>
+      {% for o in orders %}
+      <tr>
+        <td><a href="{% url 'customer:order_status' o.pk %}">#{{ o.pk }}</a></td>
+        <td>{{ o.created_at|date:"d M Y" }}</td>
+        <td>{{ o.get_status_display }}</td>
+        <td>KSh {{ o.total_amount }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p>You haven't placed any orders yet.</p>
+  {% endif %}
+</div>
+{% endblock %}

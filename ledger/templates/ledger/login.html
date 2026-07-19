@@ -1,18 +1,14 @@
 {% extends "ledger/base.html" %}
-{% block title %}Log in{% endblock %}
 {% block content %}
 <div class="card login-card">
-  <h2 class="section-title">Admin log in</h2>
+  <h2 class="section-title">
+    {% if request.GET.role == 'admin' %}Admin Sign In
+    {% elif request.GET.role == 'employee' %}Worker Sign In
+    {% else %}Sign In{% endif %}
+  </h2>
   <form method="post">
     {% csrf_token %}
-    {% for field in form %}
-      <div style="margin-bottom:14px;">
-        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-        {{ field }}
-        {% if field.errors %}<ul class="errorlist">{% for e in field.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
-      </div>
-    {% endfor %}
-    {% if form.non_field_errors %}<ul class="errorlist">{% for e in form.non_field_errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+    {{ form.as_p }}
     <button type="submit" class="btn">Log in</button>
   </form>
 </div>

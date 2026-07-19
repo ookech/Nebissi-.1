@@ -3,13 +3,16 @@ from .models import Payment, Service
 
 
 class PaymentForm(forms.ModelForm):
+    phone_number = forms.CharField(required=True, max_length=15, help_text="Enter the customer's phone number for the M-Pesa prompt")
+
     class Meta:
         model = Payment
-        fields = ['service', 'quantity', 'unit_price', 'amount', 'customer_name', 'method', 'date', 'notes']
+        fields = ['service', 'quantity', 'unit_price', 'amount', 'customer_name', 'phone_number', 'date', 'notes']
         widgets = {
             'date': forms.DateInput(attrs={'type': 'date'}),
             'notes': forms.TextInput(attrs={'placeholder': 'e.g. CV printing, 2 copies'}),
             'customer_name': forms.TextInput(attrs={'placeholder': 'Walk-in'}),
+            'phone_number': forms.TextInput(attrs={'placeholder': 'e.g. 0712345678'}),
         }
 
 

@@ -1,0 +1,14 @@
+{% extends "ledger/base.html" %}
+{% block content %}
+<div class="card">
+  <h2 class="section-title">Welcome to Nebissi</h2>
+
+  <div class="tear"></div>
+
+  <div class="staff-section">
+    <a href="{% url 'login' %}?role=admin" class="btn small">Log in as Admin</a>
+    <a href="{% url 'login' %}?role=employee" class="btn small">Log in as Worker</a>
+    <a href="{% url 'accounts:signup' %}" class="btn small secondary">Apply to Join as a Worker</a>
+  </div>
+</div>
+{% endblock %}

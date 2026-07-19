@@ -34,8 +34,8 @@
         {{ form.customer_name }}
       </div>
       <div>
-        <label for="id_method">Payment method</label>
-        {{ form.method }}
+        <label for="id_phone_number">Customer phone number</label>
+        {{ form.phone_number }}
       </div>
       <div>
         <label for="id_date">Date</label>
@@ -50,7 +50,11 @@
     <div style="display:flex;align-products:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
       <p style="font-family:'Courier Prime',monospace;font-size:28px;font-weight:700;color:var(--teal-dark);margin:0;"
         id="amountPreview">KSh 0</p>
-      <button type="submit" class="btn">{% if editing %}Update payment{% else %}Record payment{% endif %}</button>
+      <div style="text-align:right;">
+        <p style="margin:0 0 8px;color:var(--ink-soft);font-size:13px;">Payments are sent as M-Pesa prompts to the
+          customer phone.</p>
+        <button type="submit" class="btn">{% if editing %}Update payment{% else %}Record payment{% endif %}</button>
+      </div>
     </div>
   </form>
 </div>

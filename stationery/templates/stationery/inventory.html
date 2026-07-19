@@ -15,22 +15,26 @@
       </tr>
     </thead>
     <tbody>
-      {% for Product in Products %}
-      <tr class="{% if Product.is_low_stock %}low-stock{% endif %}">
-        <td>{{ Product.name }}</td>
-        <td>{{ Product.get_category_display }}</td>
-        <td>{{ Product.stock_quantity }}{% if Product.is_low_stock %} ⚠{% endif %}</td>
-        <td>KSh {{ Product.cost_price }}</td>
-        <td>KSh {{ Product.sale_price }}</td>
-        <td>KSh {{ Product.margin }}</td>
+      {% for item in items %}
+      <tr class="{% if item.stock_qty <= low_stock_threshold %}low-stock{% endif %}">
+        <td>{{ item.name }}</td>
+        <td>{{ item.get_category_display }}</td>
+        <td>{{ item.stock_qty }}{% if item.stock_qty <= low_stock_threshold %} ⚠{% endif %}</td>
+        <td>KSh {{ item.cost_price }}</td>
+        <td>KSh {{ item.sale_price }}</td>
+        <td>KSh {{ item.profit_margin }}</td>
       </tr>
       {% empty %}
-      <tr><td colspan="6">No Products yet. Add one below.</td></tr>
+      <tr>
+        <td colspan="6">No products yet.</td>
+      </tr>
       {% endfor %}
     </tbody>
   </table>
 </div>
 
-<a href="{% url 'stationery:add_Product' %}" class="btn">+ Add new Product</a>
+{% if user.profile.role == 'admin' %}
+<a href="{% url 'stationery:add_product' %}" class="btn">+ Add new product</a>
+{% endif %}
 
 {% endblock %}
