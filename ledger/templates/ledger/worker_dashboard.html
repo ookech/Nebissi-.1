@@ -21,6 +21,32 @@
 </div>
 
 <div class="card">
+  <h2 class="section-title">Available services</h2>
+  {% if available_services %}
+  <ul style="margin:0 0 12px 18px; padding:0;">
+    {% for service in available_services %}
+    <li style="margin-bottom:6px;">{{ service.name }} <span style="color:var(--accent);">(available)</span></li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p style="color:var(--ink-soft);margin:0;">No services are currently available.</p>
+  {% endif %}
+
+  {% if unavailable_services %}
+  <p style="margin:8px 0 0; font-size:13px; color:var(--ink-soft);">Disabled services:</p>
+  <ul style="margin:8px 0 0 18px; padding:0; list-style:none;">
+    {% for service in unavailable_services %}
+    <li
+      style="margin-bottom:8px; padding:8px 10px; border:1px solid #f2c9c9; border-radius:8px; background:#fff7f7; color:#8a2f2f;">
+      <strong>{{ service.name }}</strong>
+      <span style="display:block; font-size:12px; margin-top:2px;">disabled by admin</span>
+    </li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+</div>
+
+<div class="card">
   <h2 class="section-title">Payments you've recorded</h2>
   {% if my_payments %}
   <table>

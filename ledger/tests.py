@@ -1,6 +1,7 @@
 from decimal import Decimal
 from unittest.mock import patch
 
+from django.contrib import admin
 from django.contrib.auth.models import User
 from django.test import TestCase
 from django.urls import reverse
@@ -8,6 +9,47 @@ from django.utils import timezone
 
 from accounts.models import Profile
 from .models import Payment, Service
+
+
+class PageAndAdminTests(TestCase):
+    def test_homepage_renders_without_static_manifest_error(self):
+        response = self.client.get(reverse('overview'))
+        self.assertEqual(response.status_code, 200)
+
+    def test_payment_model_is_not_registered_in_admin(self):
+        self.assertNotIn(Payment, admin.site._registry)
+
+    def test_admin_pages_render_for_key_models(self):
+        admin_user = User.objects.create_user(username='admin-test', password='secret123')
+        admin_user.is_staff = True
+        admin_user.is_superuser = True
+        admin_user.save()
+
+        self.client.force_login(admin_user)
+        for path in [
+            '/admin/',
+            '/admin/ledger/service/',
+            '/admin/stationery/product/',
+            '/admin/stationery/sale/',
+            '/admin/customer/order/',
+            '/admin/accounts/profile/',
+        ]:
+            response = self.client.get(path, HTTP_HOST='127.0.0.1')
+            self.assertEqual(response.status_code, 200, msg=path)
+
+    def test_worker_dashboard_shows_service_availability_status(self):
+        employee = User.objects.create_user(username='employee-only', password='secret123')
+        employee.profile.role = 'employee'
+        employee.profile.save()
+        Service.objects.create(name='Inactive Service', default_price=5, is_active=False)
+
+        self.client.force_login(employee)
+        response = self.client.get(reverse('worker_dashboard'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Available services')
+        self.assertContains(response, 'Inactive Service')
+        self.assertContains(response, 'disabled by admin')
 
 
 class RoleAndPaymentAccessTests(TestCase):

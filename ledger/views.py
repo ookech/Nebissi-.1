@@ -285,10 +285,14 @@ def worker_dashboard(request):
         .select_related('service')
         .order_by('-date', '-id')[:50]
     )
-    services = Service.objects.filter(is_active=True)
+    services = Service.objects.order_by('name')
+    available_services = services.filter(is_active=True)
+    unavailable_services = services.filter(is_active=False)
 
     return render(request, 'ledger/worker_dashboard.html', {
         'form': form,
-        'services': services,
+        'services': available_services,
+        'available_services': available_services,
+        'unavailable_services': unavailable_services,
         'my_payments': my_payments,
     })

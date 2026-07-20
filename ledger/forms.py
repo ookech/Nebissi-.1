@@ -15,6 +15,10 @@ class PaymentForm(forms.ModelForm):
             'phone_number': forms.TextInput(attrs={'placeholder': 'e.g. 0712345678'}),
         }
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['service'].queryset = Service.objects.filter(is_active=True).order_by('name')
+
 
 class ServiceForm(forms.ModelForm):
     class Meta:

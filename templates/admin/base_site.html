@@ -1,0 +1,109 @@
+{% extends "admin/base_site.html" %}
+
+{% block title %}{{ title }} | Nebissi Admin{% endblock %}
+
+{% block extrahead %}
+{{ block.super }}
+<style>
+  :root {
+    --primary: #2563eb;
+    --secondary: #0f172a;
+    --accent: #3b82f6;
+    --surface: #f8fafc;
+    --border: #e2e8f0;
+    --text: #0f172a;
+  }
+
+  body {
+    background: linear-gradient(135deg, #f8fbff 0%, #eef4ff 100%);
+    color: var(--text);
+    font-family: "Segoe UI", Roboto, Arial, sans-serif;
+  }
+
+  #header {
+    background: linear-gradient(90deg, var(--secondary) 0%, var(--primary) 100%);
+    border-bottom: none;
+    box-shadow: 0 2px 10px rgba(15, 23, 42, 0.12);
+  }
+
+  #branding h1,
+  #branding a {
+    color: #fff !important;
+  }
+
+  .module h2,
+  .module caption,
+  .inline-group h2 {
+    background: #fff;
+    color: var(--secondary);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .module {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.05);
+    padding: 12px;
+  }
+
+  .app-list a,
+  .model a,
+  .object-tools a,
+  .button,
+  input[type="submit"],
+  input[type="button"],
+  .submit-row input {
+    border-radius: 8px;
+  }
+
+  #content {
+    padding-top: 16px;
+  }
+
+  #nav-sidebar {
+    border-right: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.7);
+  }
+
+  .button,
+  input[type="submit"],
+  input[type="button"],
+  .submit-row input {
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    padding: 8px 14px;
+  }
+
+  .button:active,
+  input[type="submit"]:active,
+  input[type="button"]:active,
+  .submit-row input:active {
+    background: var(--accent);
+  }
+
+  .object-tools a:hover,
+  .button:hover,
+  input[type="submit"]:hover,
+  input[type="button"]:hover,
+  .submit-row input:hover {
+    background: var(--accent);
+  }
+
+  .form-row {
+    padding: 10px 0;
+  }
+
+  .help,
+  .helptext {
+    color: #64748b;
+  }
+
+  .breadcrumbs {
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 8px;
+    margin: 10px 0;
+  }
+</style>
+{% endblock %}
