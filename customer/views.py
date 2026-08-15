@@ -1,5 +1,5 @@
 import json
-from django.views.decorators.csrf import csrf_exempt
+from datetime import date
 from django.http import JsonResponse
 from decimal import Decimal
 from django.shortcuts import render, redirect, get_object_or_404
@@ -9,8 +9,6 @@ from ledger.models import Payment, Service
 from stationery.models import product as Product
 from .cart import Cart
 from .models import Order, OrderItem
-from .mpesa import stk_push
-import requests as requests_lib  # for exception handling only, avoid name clash
 
 
 def _get_session_key(request):
@@ -58,6 +56,18 @@ def remove_from_cart(request, key):
     return redirect('customer:cart')
 
 
+def _get_or_create_order_payment_service():
+    """
+    Placeholder Service used to summarize an entire Order (which may include
+    non-Service items like stationery products) into a single ledger Payment row.
+    """
+    service, _ = Service.objects.get_or_create(
+        name='Customer Order',
+        defaults={'default_price': 0, 'is_active': False},
+    )
+    return service
+
+
 def checkout(request):
     cart = Cart(request)
     if len(cart) == 0:
@@ -67,7 +77,7 @@ def checkout(request):
     if request.method == 'POST':
         phone_number = request.POST.get('phone_number', '').strip()
         if not phone_number:
-            messages.error(request, 'Phone number is required for M-Pesa payment.')
+            messages.error(request, 'Phone number is required.')
             return render(request, 'customer/checkout.html', {'cart': cart})
 
         order = Order.objects.create(
@@ -87,24 +97,27 @@ def checkout(request):
         order.recalculate_total()
 
         try:
-            response = stk_push(
-                phone_number=phone_number,
+            placeholder_service = _get_or_create_order_payment_service()
+            Payment.objects.create(
+                service=placeholder_service,
+                quantity=1,
+                unit_price=order.total_amount,
                 amount=order.total_amount,
-                account_reference=f"Order{order.pk}",
-                transaction_desc=f"Nebissi order #{order.pk}",
+                customer_name='Walk-in',
+                phone_number=order.phone_number,
+                method='mpesa',
+                status='successful',
+                date=date.today(),
+                notes=f'Order #{order.pk}',
             )
-            order.checkout_request_id = response.get('CheckoutRequestID', '')
-            order.save(update_fields=['checkout_request_id'])
-            cart.clear()
-            messages.success(request, 'Check your phone to complete the M-Pesa payment.')
-        except requests_lib.HTTPError as e:
-            order.status = 'failed'
+            order.status = 'paid'
             order.save(update_fields=['status'])
-            messages.error(request, f'Could not initiate M-Pesa payment: {e}')
+            cart.clear()
+            messages.success(request, 'Payment recorded successfully.')
         except Exception as e:
             order.status = 'failed'
             order.save(update_fields=['status'])
-            messages.error(request, f'Unexpected error initiating payment: {e}')
+            messages.error(request, f'Could not record payment: {e}')
 
         return redirect('customer:order_status', pk=order.pk)
 
@@ -120,43 +133,3 @@ def order_history(request):
     session_key = request.session.session_key
     orders = Order.objects.filter(session_key=session_key) if session_key else Order.objects.none()
     return render(request, 'customer/order_history.html', {'orders': orders})
-
-
-@csrf_exempt
-def mpesa_callback(request):
-    try:
-        data = json.loads(request.body)
-        callback = data['Body']['stkCallback']
-        checkout_request_id = callback['CheckoutRequestID']
-        result_code = callback['ResultCode']
-
-        try:
-            order = Order.objects.get(checkout_request_id=checkout_request_id)
-        except Order.DoesNotExist:
-            pass
-        else:
-            if result_code == 0:
-                metadata_items = callback.get('CallbackMetadata', {}).get('Item', [])
-                items = {item.get('Name'): item.get('Value') for item in metadata_items if isinstance(item, dict)}
-                order.mpesa_receipt = items.get('MpesaReceiptNumber', '')
-                order.status = 'paid'
-            else:
-                order.status = 'failed'
-            order.save(update_fields=['status', 'mpesa_receipt'])
-
-        payment_qs = Payment.objects.filter(checkout_request_id=checkout_request_id)
-        if payment_qs.exists():
-            payment = payment_qs.get()
-            if result_code == 0:
-                metadata_items = callback.get('CallbackMetadata', {}).get('Item', [])
-                items = {item.get('Name'): item.get('Value') for item in metadata_items if isinstance(item, dict)}
-                payment.mpesa_receipt = items.get('MpesaReceiptNumber', '')
-                payment.status = 'successful'
-            else:
-                payment.status = 'failed'
-            payment.save(update_fields=['status', 'mpesa_receipt'])
-
-        return JsonResponse({'ResultCode': 0, 'ResultDesc': 'Accepted'})
-
-    except (KeyError, json.JSONDecodeError) as e:
-        return JsonResponse({'ResultCode': 1, 'ResultDesc': f'Invalid callback payload: {e}'}, status=400)

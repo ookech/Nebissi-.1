@@ -1,19 +1,20 @@
-from datetime import timedelta, date
-from decimal import Decimal
+import json
+from datetime import date, datetime, timedelta
+from decimal import Decimal, InvalidOperation
 from functools import wraps
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import LoginView
 from django.db.models import Sum, Count
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
+from django.views.decorators.csrf import csrf_exempt
 import csv
 
 from .models import Payment, Service
 from .forms import PaymentForm, ServiceForm, PaymentFilterForm
 from accounts.models import WorkerRequest
-from customer.mpesa import stk_push
 
 
 def is_admin(user):
@@ -98,41 +99,29 @@ def overview(request):
 
 @login_required
 @admin_required
-def new_payment(request, pk=None):
-    instance = get_object_or_404(Payment, pk=pk) if pk else None
+def edit_payment(request, pk):
+    """
+    Admins can no longer create new payments from the site -- every Payment
+    is now created automatically, either by the customer checkout flow or
+    by the till (C2B) confirmation callback. This view only lets an admin
+    edit an existing payment, e.g. to reassign an auto-recorded till
+    payment from the placeholder service to the real one the customer paid for.
+    """
+    payment = get_object_or_404(Payment, pk=pk)
     if request.method == 'POST':
-        form = PaymentForm(request.POST, instance=instance)
+        form = PaymentForm(request.POST, instance=payment)
         if form.is_valid():
-            payment = form.save(commit=False)
-            payment.method = 'mpesa'
-            payment.status = 'pending'
-            if not payment.recorded_by_id:
-                payment.recorded_by = request.user
-            payment.save()
-            try:
-                response = stk_push(
-                    phone_number=payment.phone_number or getattr(payment.recorded_by.profile, 'phone_number', ''),
-                    amount=payment.amount,
-                    account_reference=f'Payment{payment.pk}',
-                    transaction_desc=f'Nebissi payment for {payment.customer_name or payment.service.name}',
-                )
-                payment.checkout_request_id = response.get('CheckoutRequestID', '')
-                payment.save(update_fields=['checkout_request_id'])
-                messages.success(request, 'Payment request sent. The payment is pending until the M-Pesa transaction completes.')
-            except Exception as exc:
-                payment.status = 'failed'
-                payment.save(update_fields=['status'])
-                messages.warning(request, f'Payment could not be sent to M-Pesa: {exc}')
+            form.save()
+            messages.success(request, 'Payment updated.')
             return redirect('ledger')
     else:
-        initial = {'date': date.today(), 'quantity': 1}
-        form = PaymentForm(instance=instance, initial=initial)
+        form = PaymentForm(instance=payment)
 
     services = Service.objects.filter(is_active=True)
     return render(request, 'ledger/new_payment.html', {
         'form': form,
         'services': services,
-        'editing': instance is not None,
+        'editing': True,
     })
 
 
@@ -250,39 +239,18 @@ def delete_service(request, pk):
 
 @login_required
 def worker_dashboard(request):
+    """
+    Workers can no longer create or save payments here. Customers pay
+    directly via the till number on their own phone; successful payments
+    are recorded automatically by mpesa_c2b_confirmation. This view is now
+    read-only, so a worker can confirm a payment has actually come through.
+    """
     profile = getattr(request.user, 'profile', None)
     if not profile or profile.role != 'employee':
         return redirect('accounts:post_login')
 
-    if request.method == 'POST':
-        form = PaymentForm(request.POST)
-        if form.is_valid():
-            payment = form.save(commit=False)
-            payment.method = 'mpesa'
-            payment.status = 'pending'
-            payment.recorded_by = request.user
-            payment.save()
-            try:
-                response = stk_push(
-                    phone_number=payment.phone_number or getattr(request.user.profile, 'phone_number', ''),
-                    amount=payment.amount,
-                    account_reference=f'Payment{payment.pk}',
-                    transaction_desc=f'Nebissi payment for {payment.customer_name or payment.service.name}',
-                )
-                payment.checkout_request_id = response.get('CheckoutRequestID', '')
-                payment.save(update_fields=['checkout_request_id'])
-                messages.success(request, 'Payment request sent. The payment is pending until the M-Pesa transaction completes.')
-            except Exception as exc:
-                payment.status = 'failed'
-                payment.save(update_fields=['status'])
-                messages.warning(request, f'Payment could not be sent to M-Pesa: {exc}')
-            return redirect('worker_dashboard')
-    else:
-        form = PaymentForm(initial={'date': date.today(), 'quantity': 1})
-
-    my_payments = (
-        Payment.objects.filter(recorded_by=request.user)
-        .select_related('service')
+    recent_payments = (
+        Payment.objects.select_related('service')
         .order_by('-date', '-id')[:50]
     )
     services = Service.objects.order_by('name')
@@ -290,9 +258,83 @@ def worker_dashboard(request):
     unavailable_services = services.filter(is_active=False)
 
     return render(request, 'ledger/worker_dashboard.html', {
-        'form': form,
         'services': available_services,
         'available_services': available_services,
         'unavailable_services': unavailable_services,
-        'my_payments': my_payments,
+        'recent_payments': recent_payments,
     })
+
+
+def _get_or_create_till_placeholder_service():
+    """
+    Placeholder Service used for till payments recorded automatically before
+    an admin has assigned them to the real service the customer paid for.
+    """
+    service, _ = Service.objects.get_or_create(
+        name='Unassigned Till Payment',
+        defaults={'default_price': 0, 'is_active': False},
+    )
+    return service
+
+
+@csrf_exempt
+def mpesa_c2b_validation(request):
+    """
+    Safaricom calls this before completing a till (Buy Goods) payment.
+    We accept everything here; the actual recording happens on confirmation.
+    """
+    return JsonResponse({'ResultCode': 0, 'ResultDesc': 'Accepted'})
+
+
+@csrf_exempt
+def mpesa_c2b_confirmation(request):
+    """
+    Safaricom calls this automatically after a customer successfully pays
+    the till number directly from their own phone. No prompt was sent from
+    the site -- this is the only place a till payment turns into a Payment
+    row. It's logged against a placeholder service; an admin assigns it to
+    the correct service afterward.
+    """
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({'ResultCode': 1, 'ResultDesc': 'Invalid payload'}, status=400)
+
+    trans_id = data.get('TransID', '')
+    if not trans_id:
+        return JsonResponse({'ResultCode': 1, 'ResultDesc': 'Missing TransID'}, status=400)
+
+    # Safaricom may retry confirmation calls; don't double-record the same transaction.
+    if Payment.objects.filter(mpesa_receipt=trans_id).exists():
+        return JsonResponse({'ResultCode': 0, 'ResultDesc': 'Accepted'})
+
+    try:
+        amount = Decimal(str(data.get('TransAmount', '0')))
+    except InvalidOperation:
+        amount = Decimal('0')
+
+    phone_number = data.get('MSISDN', '')
+    name_parts = [data.get('FirstName', ''), data.get('MiddleName', ''), data.get('LastName', '')]
+    customer_name = ' '.join(part for part in name_parts if part).strip() or 'Walk-in'
+
+    trans_time_raw = data.get('TransTime', '')
+    try:
+        payment_date = datetime.strptime(trans_time_raw, '%Y%m%d%H%M%S').date()
+    except ValueError:
+        payment_date = date.today()
+
+    Payment.objects.create(
+        service=_get_or_create_till_placeholder_service(),
+        quantity=1,
+        unit_price=amount,
+        amount=amount,
+        customer_name=customer_name,
+        phone_number=phone_number,
+        method='mpesa',
+        status='successful',
+        mpesa_receipt=trans_id,
+        date=payment_date,
+        notes=f'Till payment, bill ref: {data.get("BillRefNumber", "")}',
+    )
+
+    return JsonResponse({'ResultCode': 0, 'ResultDesc': 'Accepted'})

@@ -4,8 +4,7 @@ from . import views
 
 urlpatterns = [
     path('', views.overview, name='overview'),
-    path('payments/new/', views.new_payment, name='new_payment'),
-    path('payments/<int:pk>/edit/', views.new_payment, name='edit_payment'),
+    path('payments/<int:pk>/edit/', views.edit_payment, name='edit_payment'),
     path('payments/<int:pk>/delete/', views.delete_payment, name='delete_payment'),
     path('ledger/', views.ledger, name='ledger'),
     path('ledger/export/', views.export_csv, name='export_csv'),
@@ -15,4 +14,6 @@ urlpatterns = [
     path('login/', views.RoleHintLoginView.as_view(), name='login'),
     path('logout/', auth_views.LogoutView.as_view(next_page='overview'), name='logout'),
     path('worker/', views.worker_dashboard, name='worker_dashboard'),
+    path('mpesa/c2b/validation/', views.mpesa_c2b_validation, name='mpesa_c2b_validation'),
+    path('mpesa/c2b/confirmation/', views.mpesa_c2b_confirmation, name='mpesa_c2b_confirmation'),
 ]

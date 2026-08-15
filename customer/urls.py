@@ -11,5 +11,4 @@ urlpatterns = [
     path('checkout/', views.checkout, name='checkout'),
     path('orders/', views.order_history, name='order_history'),
     path('orders/<int:pk>/', views.order_status, name='order_status'),
-    path('mpesa/callback/', views.mpesa_callback, name='mpesa_callback'),
 ]

@@ -1,23 +1,12 @@
 {% extends "ledger/base.html" %}
-{% block title %}My payments{% endblock %}
+{% block title %}Worker dashboard{% endblock %}
 {% block content %}
 <div class="card">
-  <h2 class="section-title">Record a payment</h2>
-  <form method="post">
-    {% csrf_token %}
-    <div class="form-grid">
-      <div><label for="id_service">Service</label>{{ form.service }}</div>
-      <div><label for="id_date">Date</label>{{ form.date }}</div>
-      <div><label for="id_quantity">Quantity</label>{{ form.quantity }}</div>
-      <div><label for="id_unit_price">Unit price</label>{{ form.unit_price }}</div>
-      <div><label for="id_customer_name">Customer</label>{{ form.customer_name }}</div>
-      <div><label for="id_phone_number">Phone number</label>{{ form.phone_number }}</div>
-      <div class="grow"><label for="id_notes">Notes</label>{{ form.notes }}</div>
-    </div>
-    <div style="margin-top:14px;">
-      <button class="btn" type="submit">Save payment</button>
-    </div>
-  </form>
+  <h2 class="section-title">How customers pay</h2>
+  <p style="color:var(--ink-soft); margin:0;">
+    Customers pay directly by entering the till number on their own phone. You don't need to send or record anything —
+    once the payment goes through, it appears automatically in the list below.
+  </p>
 </div>
 
 <div class="card">
@@ -47,8 +36,8 @@
 </div>
 
 <div class="card">
-  <h2 class="section-title">Payments you've recorded</h2>
-  {% if my_payments %}
+  <h2 class="section-title">Recent payments</h2>
+  {% if recent_payments %}
   <table>
     <thead>
       <tr>
@@ -62,7 +51,7 @@
       </tr>
     </thead>
     <tbody>
-      {% for p in my_payments %}
+      {% for p in recent_payments %}
       <tr>
         <td>{{ p.date }}</td>
         <td>{{ p.service.name }}</td>
@@ -84,11 +73,11 @@
     </tbody>
   </table>
   <p style="color:var(--ink-soft);font-size:13px;margin-top:10px;">
-    Employees can record payments and view their own entries; pending payments remain marked as pending until the M-Pesa
-    transaction is confirmed, and only the employer can edit or remove payments.
+    Payments are recorded automatically once a customer pays the till number. Only the admin can edit, reassign, or remove
+    payments.
   </p>
   {% else %}
-  <div class="empty-state">You haven't recorded any payments yet.</div>
+  <div class="empty-state">No payments recorded yet.</div>
   {% endif %}
 </div>
 {% endblock %}

@@ -3,7 +3,7 @@ from .models import Payment, Service
 
 
 class PaymentForm(forms.ModelForm):
-    phone_number = forms.CharField(required=True, max_length=15, help_text="Enter the customer's phone number for the M-Pesa prompt")
+    phone_number = forms.CharField(required=True, max_length=15, help_text="Customer's phone number, for your records")
 
     class Meta:
         model = Payment

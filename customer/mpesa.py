@@ -64,7 +64,7 @@ def stk_push(phone_number, amount, account_reference, transaction_desc):
     url = "https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest"
     headers = {"Authorization": f"Bearer {access_token}"}
     payload = {
-        "BusinessShortCode": shortcode,
+        "BusinessShortCode": '4988406',
         "Password": password,
         "Timestamp": timestamp,
         "TransactionType": "CustomerPayBillOnline",

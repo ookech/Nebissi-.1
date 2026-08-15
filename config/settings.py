@@ -152,3 +152,7 @@ MPESA_CONSUMER_SECRET = os.environ.get('MPESA_CONSUMER_SECRET', 'your_safaricom_
 MPESA_SHORTCODE = os.environ.get('MPESA_SHORTCODE', 'your_business_shortcode')
 MPESA_PASSKEY = os.environ.get('MPESA_PASSKEY', 'your_safaricom_passkey')
 MPESA_CALLBACK_URL = os.environ.get('MPESA_CALLBACK_URL', 'https://your-public-url.example.com/shop/mpesa/callback/')
+
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'a1b2-41-90-64-12.ngrok-free.app']
+
+CSRF_TRUSTED_ORIGINS = ['https://a1b2-41-90-64-12.ngrok-free.app']
