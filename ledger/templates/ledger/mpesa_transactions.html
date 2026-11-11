@@ -1,0 +1,76 @@
+{% extends "admin/base_site.html" %}
+
+{% block title %}M-Pesa Transactions | Nebissi Admin{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">Home</a> &rsaquo; M-Pesa Transactions
+</div>
+{% endblock %}
+
+{% block content %}
+<h1>M-Pesa Transactions</h1>
+
+<div class="module">
+    <form method="get">
+        <input type="text" name="q" value="{{ q }}" placeholder="Search receipt, phone or name" size="32">
+        <select name="status">
+            <option value="">All statuses</option>
+            {% for s in statuses %}
+            <option value="{{ s }}" {% if s==status %}selected{% endif %}>{{ s|capfirst }}</option>
+            {% endfor %}
+        </select>
+        <input type="submit" value="Filter">
+        {% if q or status %}<a href="{% url 'mpesa_transactions' %}">Clear</a>{% endif %}
+    </form>
+</div>
+
+<p>
+    {{ result_count }} transaction{{ result_count|pluralize }} &middot;
+    Successful total: <strong>KES {{ total_successful }}</strong>
+</p>
+
+<div class="module">
+    <table style="width:100%">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Receipt</th>
+                <th>Phone</th>
+                <th>Customer</th>
+                <th>Service</th>
+                <th>Amount</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for p in page %}
+            <tr>
+                <td>{{ p.date }}</td>
+                <td>{{ p.mpesa_receipt }}</td>
+                <td>{{ p.phone_number }}</td>
+                <td>{{ p.customer_name }}</td>
+                <td>{{ p.service.name }}</td>
+                <td>{{ p.amount }}</td>
+                <td>{{ p.status|capfirst }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="7">No M-Pesa transactions found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<p class="paginator">
+    {% if page.has_previous %}
+    <a href="?page={{ page.previous_page_number }}{% if querystring %}&{{ querystring }}{% endif %}">&laquo;
+        Previous</a>
+    {% endif %}
+    Page {{ page.number }} of {{ page.paginator.num_pages }}
+    {% if page.has_next %}
+    <a href="?page={{ page.next_page_number }}{% if querystring %}&{{ querystring }}{% endif %}">Next &raquo;</a>
+    {% endif %}
+</p>
+{% endblock %}

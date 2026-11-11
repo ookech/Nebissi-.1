@@ -6,7 +6,8 @@ from functools import wraps
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import LoginView
-from django.db.models import Sum, Count
+from django.core.paginator import Paginator
+from django.db.models import Sum, Count, Q
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
@@ -162,6 +163,51 @@ def ledger(request):
         'form': form,
         'payments': qs,
         'total': total,
+    })
+
+
+@login_required
+@admin_required
+def mpesa_transactions(request):
+    """
+    Admin-only list of every M-Pesa transaction (till payments recorded by
+    the C2B confirmation callback, plus any other payment with method 'mpesa').
+    Supports search by receipt, phone number or customer name, and a status filter.
+    """
+    base_qs = Payment.objects.filter(method='mpesa')
+    qs = base_qs.select_related('service').order_by('-date', '-id')
+
+    q = request.GET.get('q', '').strip()
+    status = request.GET.get('status', '').strip()
+
+    if q:
+        qs = qs.filter(
+            Q(mpesa_receipt__icontains=q)
+            | Q(phone_number__icontains=q)
+            | Q(customer_name__icontains=q)
+        )
+    if status:
+        qs = qs.filter(status=status)
+
+    total_successful = (
+        qs.filter(status='successful').aggregate(t=Sum('amount'))['t'] or Decimal('0')
+    )
+
+    paginator = Paginator(qs, 25)
+    page = paginator.get_page(request.GET.get('page'))
+
+    # Keep the search/filter in the pagination links
+    params = request.GET.copy()
+    params.pop('page', None)
+
+    return render(request, 'ledger/mpesa_transactions.html', {
+        'page': page,
+        'q': q,
+        'status': status,
+        'statuses': base_qs.order_by().values_list('status', flat=True).distinct(),
+        'total_successful': total_successful,
+        'result_count': paginator.count,
+        'querystring': params.urlencode(),
     })
 
 

@@ -15,5 +15,6 @@ urlpatterns = [
     path('logout/', auth_views.LogoutView.as_view(next_page='overview'), name='logout'),
     path('worker/', views.worker_dashboard, name='worker_dashboard'),
     path('mpesa/c2b/validation/', views.mpesa_c2b_validation, name='mpesa_c2b_validation'),
+    path('mpesa/transactions/', views.mpesa_transactions, name='mpesa_transactions'),
     path('mpesa/c2b/confirmation/', views.mpesa_c2b_confirmation, name='mpesa_c2b_confirmation'),
 ]
